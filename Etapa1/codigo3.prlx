@@ -3,6 +3,8 @@ This is program codigo3.
     It presents:
         unalterable number pi = 3.1415;
         unalterable number euler = 2.7182;
+        unalterable answer true = yes;
+        unalterable answer false = no;
 
     Let us begin:
         {programa que calcula o k-fatorial de um número}
