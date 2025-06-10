@@ -20,7 +20,7 @@ This is program codigo3.
             alterable number var := n - k;
             as long as ((n - k) >= 1) do [
                 acum := acum * var;
-                var := var - k
+                var := var - k;
             ]
 
             show (acum);
