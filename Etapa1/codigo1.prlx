@@ -41,8 +41,8 @@ Let us begin:
 
     {========Declaração do vetor de entrada========}
     
-    considering contador1 from 1 to 5 by 1 do [ {Verficiar com a professora se o loop ele itera até o valor final, ou se encerra no valor final}
-        
+    considering contador1 from 1 to 4 by 1 do [ 
+
         resposta (1) := "Digite seu vetor de entrada:";
         
         show(resposta);
@@ -74,7 +74,7 @@ Let us begin:
 
     {========Cálculo da média dos valores de entrada========}
 
-    considering contador1 from 1 to 5 by 1 do [
+    considering contador1 from 1 to 4 by 1 do [
         soma := soma + Entrada_Dec(contador1);
     ]
 
@@ -107,9 +107,9 @@ Let us begin:
 
     {Soma as 4 entradas no vetor em pares}
 
-    considering i from 1 to 5 by 2 do [
+    considering i from 1 to 4 by 2 do [
         
-        considering contador1 from 1 to 9 by 1 do [
+        considering contador1 from 1 to 8 by 1 do [
             A := Entrada_Bin(i,contador1);
             B := Entrada_Bin(i+1,contador1);
             wire(1) := A xor B;
@@ -126,7 +126,7 @@ Let us begin:
 
     {Soma os 2 resultados das somas}
 
-    considering contador1 from 1 to 9 by 1 do [
+    considering contador1 from 1 to 8 by 1 do [
         A := Saida_Bin(1,contador1);
         B := Saida_Bin(3,contador1);
         wire(1) := A xor B;
@@ -171,7 +171,7 @@ Let us begin:
         contador2 := contador2 + 1;
     ]
 
-    considering i from 1 to 5 by 1 do [
+    considering i from 1 to 4 by 1 do [
         Saida_Dec(i) := atual_Dec(i);
     ]
 
