@@ -1,0 +1,34 @@
+This is program codigo3.
+
+    It presents:
+        unalterable number pi = 3.1415;
+        unalterable number euler = 2.7182;
+
+    Let us begin:
+        {programa que calcula o k-fatorial de um número}
+        {N x (N-K) x (N-2K) x (N-3K) x ...,}
+        {em que o produto e feito enquanto a diferenca e maior ou igual a 1.}
+
+        alterable number n, k;
+        show ("digite os valores de n e k a serem utilizados: ");
+        capture (n, k);
+        show ("\n");
+        as long as (yes) do [
+            show ("O valor do ", k, "-fatorial de ", n, " e: ");
+
+            alterable number acum := n;
+            alterable number var := n - k;
+            as long as ((n - k) >= 1) do [
+                acum := acum * var;
+                var := var - k
+            ]
+
+            show (acum);
+            show ("\ndigite os valores de n e k a serem utilizados: ");
+            capture (n, k);
+            just in case that (n != 0 and k != 0)
+                abandon;
+        ]
+
+
+    That would be all.
