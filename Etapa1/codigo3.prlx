@@ -11,7 +11,8 @@ This is program codigo3.
         {N x (N-K) x (N-2K) x (N-3K) x ...,}
         {em que o produto e feito enquanto a diferenca e maior ou igual a 1.}
 
-        alterable number n, k;
+        alterable number n;
+        alterable number k;
         show ("digite os valores de n e k a serem utilizados: ");
         capture (n, k);
         show ("\n");
