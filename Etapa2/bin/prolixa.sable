@@ -1,0 +1,71 @@
+Package prolixa;
+
+Helpers
+    all = [0 .. 0xFFFF];    /* Qualquer caractere da tabela ASCII */
+    lowercase = ['a' ..'z'];
+    uppercase = ['A' ..'Z'];
+    digito = ['0' .. '9'];
+    digito_hexa = [digito + [['a' .. 'f'] + ['A' .. 'F']]];
+
+    numero_real = digito+ '.' digito+;
+
+    espaco = ' ';
+    tab = 9;
+    rc = 13;
+    nl = 10;
+    eol = rc nl | rc | nl;
+    blank = (eol | tab | espaco)+;
+
+    comment = '{' all* '}';
+
+    letra = lowercase | uppercase | '_' ;
+
+    id = uppercase (letra)*;
+
+Ignored tokens:
+    blank, comment;
+
+
+Tokens
+
+    SYMBOL = ''' all ''';
+    NUMBER = digito+ | digito_hexa+ | numero_real;
+    ANSWER = 'yes' | 'no';
+
+    constante = 'unalterable' identificador;
+    variavel = 'alterable' identificador;
+
+    bloco = '[' {delcaracao} {comando} ']';
+
+    semicolon = ';';
+
+    igualdade = '=';
+    atribui = ':=';
+    
+    mais = '+';
+    menos = '-';
+    estrela = '*';
+    div = '/';
+    div_int = '//';
+
+    eq = '==';
+    neq = '!=';
+    lt = '<';
+    lteq = '<=';
+    gt = '>';
+    gteq = '>=';
+
+    e_mark = '!';
+    and = 'and';
+    or = 'or';
+    xor = 'xor';
+
+    if = 'just in case that';
+    else = 'otherwise';
+    while = 'as long as';
+    do = 'do';
+    for = 'considering that';
+    print = 'show';
+    scan = 'capture';
+
+    identificador = id ;

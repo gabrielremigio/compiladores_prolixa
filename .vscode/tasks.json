@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Rodar SableCC",
+      "type": "shell",
+      "command": "java",
+      "args": [
+        "-jar",
+        "/home/john/sablecc-3.7/lib/sablecc.jar",
+        "/home/john/Códigos/Ambiente-Java/compiladores_prolixa/Etapa2/src/prolixa.sable"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
