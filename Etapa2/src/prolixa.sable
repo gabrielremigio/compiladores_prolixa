@@ -12,13 +12,17 @@ Helpers
     espaco = ' ';
     aspa_simples = 39;
     aspa_dupla = 34;
+    chave_dir_ascii = 123;
+    chave_esq_ascii = 125;
     tab = 9;
     rc = 13;
     nl = 10;
     eol = rc nl | rc | nl;
     blank = (eol | tab | espaco)+;
 
-    comment = '{' all* '}';
+    all_sem_chave = [all - [chave_dir_ascii + chave_esq_ascii]];
+
+    comment = '{' all_sem_chave* '}';
 
     letra = lowercase | uppercase | '_' ;
 
