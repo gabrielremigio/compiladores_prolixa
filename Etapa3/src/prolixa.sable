@@ -114,10 +114,83 @@ Tokens
 
     numero = ('-')? (digito)+ | ('-')? (numero_real)+;
     string = aspa_dupla all_sem_aspas* aspa_dupla;
-    symbol_simples_e_especiais = aspa_simples all_sem_aspas* aspa_simples;
+    symbol_values = aspa_simples all_sem_aspas* aspa_simples;
 
     blank = blank;
     comment = comment;
 
 Ignored Tokens
     blank, comment;
+
+Productions
+    
+    start = 
+        {Programa_Start} programa;
+
+    programa = 
+        {Programa} this is program identificador dot declaracoes comandos;
+
+    delcaracoes = 
+        {Declaracoes} it presents d_dot declaracao+;
+
+    comandos = 
+        {Comandos} let us begin d_dot comando+ that2 would be all dot;
+
+    declaracao = 
+        {Alterable_declaracao} alterable tipo identificador semicolon |
+        {Unalterable_declaracao} unalterable tipo identificador [vincula valor] semicolon |
+        {Vector_declaracao} vector of tipo p_dir exp { x exp } p_esq identificador semicolon;
+
+    tipo = 
+        {Numero_tipo} 'numero' |
+        {Answer_tipo} 'answer' |
+        {Symbol_tipo} 'symbol';
+
+    var = 
+        {Identificador_var1} identificador |
+        {Identificador_var2} identificador p_dir exp { colon exp } p_esq;
+    
+    unalt = 
+        {Identificador_unalt} identificador;
+
+    valor = 
+        {Symbol_valor} symbol_values |
+        {Numero_valor} numero |
+        {Answer_valor} answer_values |
+        {String_valor} string;
+    
+    comando =
+        {Var_comando} var atribui exp semicolon |
+        {Unalt_comando} unalt vincula exp semicolon |
+        {Capture} capture p_dir { var colon } var p_esq semicolon |
+        {Show} show p_dir { exp colon } exp p_esq semicolon |
+        {Just in case} just in case that1 p_dir exp p_esq do comando [otherwise comando] |
+        {As long as} as long as p_dir exp p_esq do comando |
+        {Considering} considering var from exp to exp by exp do comando |
+        {Abadon} abandon semicolon |
+        {Goto} go to next iteration semicolon |
+        {Bloco} bloco;
+
+    bloco = 
+        {Bloco de comando} c_dir {declaracao} {comando} c_esq;
+
+    exp = 
+        {Valor_exp} valor |
+        {Var_exp} var |
+        {Exp1} p_dir exp p_esq |
+        {Exp2} menos exp |
+        {Exp3} exp mais exp |
+        {Exp4} exp menos exp |
+        {Exp5} exp estrela exp |
+        {Exp6} exp div exp |
+        {Exp7} exp div_int exp |
+        {Exp8} exp eq exp |
+        {Exp9} exp neq exp |
+        {Exp10} exp lteq exp |
+        {Exp11} exp gteq exp |
+        {Exp12} exp lt exp |
+        {Exp13} exp gt exp |
+        {Exp14} exp and exp |
+        {Exp15} exp or exp |
+        {Exp16} exp xor exp |
+        {Exp17} exclamacao exp; 
