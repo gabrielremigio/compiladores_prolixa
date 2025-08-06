@@ -117,8 +117,7 @@ Tokens
     barra = '|';
 
     char = ''' not_cr_lf ''';       /* Definição de como um caractere é reconhecido => 'a' */
-    char_dec = digito+;
-    char_hexa = '0' ('x' | 'X') digito_hexa+;
+    numero_hexa = '0' ('x' | 'X') digito_hexa+;
     q_mark = '?';
     
     vincula = '=';
@@ -207,8 +206,8 @@ Productions
 
     char = 
         {char} T.char |
-        {dec} char_dec |
-        {hex} char_hexa;
+        {dec} numero |
+        {hex} numero_hexa;
 
     conjunto = 
         {operacao} c_esq [left]:basic op_bin [right]:basic c_dir |
@@ -278,9 +277,6 @@ Productions
     var_size_list = 
         {unico} exp |
         {multiplos} x var_size_list;
-
-    var2_tail = 
-        {var2_tail} colon exp;
     
     unalt = 
         {identificador_unalt} identificador;
