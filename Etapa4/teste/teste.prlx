@@ -1,0 +1,18 @@
+This is program Hello_world.
+
+It presents:
+
+    alterable number Valor_a ;
+    unalterable number Valor_b;
+
+Let us begin:
+
+    Valor_a := 2;
+    Valor_b = 10.2;
+
+    Valor_a := Valor_a + Valor_b;
+
+    show(Valor_a);
+
+That would be all.
+
