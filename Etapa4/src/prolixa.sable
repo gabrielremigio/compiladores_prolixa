@@ -1,0 +1,404 @@
+Package prolixa;
+
+Helpers
+    all = [0 .. 0xFFFF];    /* Qualquer caractere da tabela ASCII */
+    lowercase = ['a' ..'z'];
+    uppercase = ['A' ..'Z'];
+    digito = ['0' .. '9'];
+    digito_hexa = [digito + [['a' .. 'f'] + ['A' .. 'F']]];
+
+    numero_decimal = (digito)+;
+    numero_real = (digito)+ '.' (digito)+;
+
+    espaco = ' ';
+    aspa_simples = 39;
+    aspa_dupla = 34;
+    chave_dir_ascii = 123;
+    chave_esq_ascii = 125;
+    tab = 9;
+    rc = 13;
+    nl = 10;
+    eol = rc nl | rc | nl;
+    blank = (eol | tab | espaco)+;
+
+    all_sem_chave = [all - chave_esq_ascii];
+
+    all_sem_aspas = [all - [aspa_dupla + aspa_simples]];
+
+    not_cr_lf = [all - [rc + nl]];   
+
+    comment = '{' all_sem_chave* '}'; /* regra de comentário ainda está inválida de acordo com os padrões de c, verificar o docs de testes para ver quais casos são inválidos. */
+
+    letra = lowercase | uppercase | '_' ;
+
+    id = uppercase (letra)*;
+
+States
+    normal, package;
+
+Tokens
+
+    {package} pkg_id = letra (letra | digito)*;
+
+    {normal->package} package = 'Package';
+
+    states = 'States';
+    helpers = 'Helpers';
+    tokens = 'Tokens';
+    ignored = 'Ignored';
+    productions = 'Productions';
+
+    token_specifier = 'T';
+    production_spceifier = 'P';
+
+    this = 'This';
+    is = 'is';
+    program = 'program';
+    it = 'It';
+    presents = 'presents';
+    let = 'Let';
+    us = 'us';
+    begin = 'begin';
+    would = 'would';
+    be = 'be';
+    all = 'all';
+    unalterable = 'unalterable';
+    alterable = 'alterable';
+    symbol = 'symbol';
+    number = 'number';
+    answer = 'answer';
+    answer_values = 'yes' | 'no';
+    just = 'just';
+    in  = 'in';
+    case = 'case';
+    that = 'that';
+    otherwise = 'otherwise';
+    as1 = 'as';
+    as2 = 'as';
+    long = 'long';
+    do = 'do';
+    considering = 'considering';
+    that1 = 'that';
+    that2 = 'That';
+    from = 'from';
+    by = 'by';
+    show = 'show';
+    capture = 'capture';
+    abandon = 'abandon';
+    go = 'go';
+    to = 'to';
+    next = 'next';
+    iteration = 'iteration';
+    vector = 'vector';
+    of = 'of';
+
+    x = 'x';
+
+    identificador = id ;
+
+    constante = 'unalterable' id;
+    variavel = 'alterable' id;
+
+    semicolon = ';';
+    colon = ',';
+    dot = '.';
+    d_dot = ':';
+    aspa_simples = aspa_simples;
+    aspa_dupla = aspa_dupla;
+
+    p_esq = '(';
+    p_dir = ')';
+    c_esq = '[';
+    c_dir = ']';
+    chave_esq = '{';
+    chave_dir = '}';
+
+    seta_dir = '->';
+    barra = '|';
+
+    char = ''' not_cr_lf ''';       /* Definição de como um caractere é reconhecido => 'a' */
+    numero_hexa = '0' ('x' | 'X') digito_hexa+;
+    q_mark = '?';
+    
+    vincula = '=';
+    atribui = ':=';
+    
+    mais = '+';
+    menos = '-';
+    estrela = '*';
+    div = '/';
+    div_int = '//';
+
+    eq = '==';
+    neq = '!=';
+    lt = '<';
+    lteq = '<=';
+    gt = '>';
+    gteq = '>=';
+
+    exclamacao = '!';
+    and = 'and';
+    or = 'or';
+    xor = 'xor';
+
+    numero = ((numero_decimal)+ | (numero_real)+);
+    string = aspa_dupla all_sem_aspas* aspa_dupla;
+    symbol_values = aspa_simples all_sem_aspas* aspa_simples;
+
+    blank = blank;
+    comment = comment;
+
+Ignored Tokens
+    blank, comment;
+
+Productions
+
+    start = 
+        {grammar} grammar |
+        {programa} programa;
+
+    grammar = P.package? P.helpers? P.states? P.tokens? P.ign_tokens? P.productions?;
+
+    package = T.package pkg_name?;
+
+    pkg_name = pkg_id [pkg_ids]:pkg_name_tail* semicolon;
+
+    pkg_name_tail = dot pkg_id;
+
+    helpers = T.helpers [helper_defs]: helper_def*;
+
+    helper_def = identificador vincula expr_reg semicolon;
+
+    states = T.states id_list? semicolon;
+
+    id_list = identificador [ids]:id_list_tail*;
+
+    id_list_tail = colon identificador;
+
+    tokens = T.tokens [token_defs]: token_def*;
+
+    token_def = state_list? identificador vincula expr_reg look_ahead? semicolon;
+
+    state_list = chave_esq identificador transition? [state_lists]:state_list_tail* chave_dir;
+
+    state_list_tail = colon identificador transition?;
+
+    transition = seta_dir identificador;
+
+    ign_tokens = ignored T.tokens id_list? semicolon;
+
+    look_ahead = div expr_reg;
+
+    expr_reg = concat[concats]:expr_reg_tail*;
+
+    expr_reg_tail = barra concat;
+
+    concat = [expr_uns]:expr_un*;
+
+    expr_un = basic op_un?;
+
+    basic = 
+        {char} P.char |
+        {conjunto} conjunto |
+        {string} string |
+        {identificador} identificador |
+        {expr_reg} p_esq expr_reg p_dir;
+
+    char = 
+        {char} T.char |
+        {dec} numero |
+        {hex} numero_hexa;
+
+    conjunto = 
+        {operacao} c_esq [left]:basic op_bin [right]:basic c_dir |
+        {intervalo} c_esq [left]:P.char d_dot [right]:P.char c_dir;
+    
+    op_un = 
+        {estrela} T.estrela |
+        {q_mark} T.q_mark |
+        {mais} T.mais;
+
+    op_bin = 
+        {mais} T.mais |
+        {menos} T.menos;
+
+    productions = T.productions [prods]:prod*;
+
+    prod = identificador vincula alts semicolon;
+
+    alts = alt [alts]:alts_tail*;
+
+    alts_tail = barra alt;
+
+    alt = 
+        {parsed} alt_name? [elems]:elem* |
+        {ignored} p_esq alt_name? [elems]:elem* p_dir;
+
+    alt_name = chave_esq identificador chave_dir;
+
+    elem = elem_name? specifier? identificador op_un?;
+
+    elem_name = c_esq identificador c_dir colon;
+
+    specifier = 
+        {token} token_specifier dot |
+        {production} production_spceifier dot; 
+
+
+    
+
+    programa = 
+        {programa} this is program identificador dot declaracoes comandos;
+
+    declaracoes = 
+        {declaracoes} it presents d_dot declaracao+;
+
+    comandos = 
+        {comandos} let us begin d_dot comando+ that2 would be all dot;
+
+    declaracao = 
+        {alterable_declaracao} alterable tipo identificador semicolon |
+        {unalterable_declaracao} unalterable tipo identificador vincula_valor? semicolon |
+        {vector_declaracao} vector of tipo p_esq vector_size_list p_dir identificador semicolon;
+
+    vector_size_list =
+        {single_size} exp |
+        {multiple_sizes} exp x vector_size_list;    
+
+    vincula_valor = 
+        {vincula_valor} vincula valor;  
+
+    tipo = 
+        {numero_tipo} number |
+        {answer_tipo} answer |
+        {symbol_tipo} symbol;
+
+    var {-> a_exp} = 
+        {identificador_var1} identificador {-> identificador.a_exp} |
+        {identificador_var2} [nome]:identificador p_esq [args]:var_size_list p_dir {-> New a_exp.a_identificador(nome, args)};
+
+    var_size_list {-> a_exp} = 
+        {unico} [arg]:exp {-> arg.a_exp} |
+        {multiplos} [arg]:exp x [rest]:var_size_list {-> New a_var_size_list.a_multiplos(arg.a_exp, rest.a_exp)} ;
+    
+    unalt = 
+        {identificador_unalt} identificador;
+
+    valor {-> a_exp} = 
+        {symbol_valor} symbol_values {-> New a_exp.a_symbol_values(symbol_values.a_exp)} |
+        {numero_valor} numero {-> New a_exp.a_numero(numero.a_exp)} | 
+        {answer_valor} answer_values {-> New a_exp.a_answer_values(answer_values.a_exp)} |
+        {string_valor} string {-> New a_exp.a_string(string.a_exp)};
+    
+    comando =
+        {atribuicao} var atribui exp semicolon |
+        {vinculacao} unalt vincula exp semicolon |
+        {captura} capture p_esq capture_var_head* var p_dir semicolon |
+        {exibicao} show p_esq show_exp_head* exp p_dir semicolon |
+        {stmt} stmt |
+        {open_stmt} open_stmt |
+        {enquanto} as1 long as2 p_esq exp p_dir do comando |
+        {iteracao} considering var from exp to exp_1 by exp_2 do comando |
+        {abandono} abandon semicolon |
+        {proxima_iteracao} go to next iteration semicolon |
+        {bloco} bloco;
+
+    stmt =
+        {if_matched} just in case that1 p_esq exp p_dir do stmt otherwise stmt2;
+
+    stmt2 = 
+        {stmt2} stmt;
+
+    open_stmt =
+        {if_unmatched} just in case that1 p_esq exp p_dir do comando |
+        {if_else_unmatched} just in case that1 p_esq exp p_dir do stmt otherwise open_stmt;
+
+    capture_var_head = 
+        {capture_var_head} var colon;
+
+    show_exp_head = 
+        {show_exp_head} exp colon;
+
+    comando_a = 
+        {comando_a} comando;
+
+    bloco = 
+        {bloco_de_comando} c_dir declaracao* comando* c_esq;
+    
+    exp {-> a_exp} =
+        {or}        [esq]:exp_or or [dir]:exp_xor {-> New a_exp.a_or(esq.a_exp, dir.a_exp)} | 
+        {pass}      exp_or {-> exp_or.a_exp}; 
+
+    exp_1 = 
+        {exp} exp;
+
+    exp_2 = 
+        {exp} exp;
+
+    exp_or {-> a_exp} =
+        {xor}       [esq]:exp_xor xor [dir]:exp_and {-> New a_exp.a_xor(esq.a_exp, dir.a_exp)} |
+        {pass}      exp_xor {-> exp_xor.a_exp};
+
+    exp_xor {-> a_exp} = 
+        {and}       [esq]:exp_and and [dir]:exp_rel {-> New a_exp.a_and(esq.a_exp, dir.a_exp)} 
+        {pass}      exp_and {-> exp_and.a_exp};
+
+    exp_and {-> a_exp} =
+        {rel_eq}    [esq]:exp_rel eq [dir]:exp_rel_a {-> New a_exp.a_eq(esq.a_exp, dir.a_exp)} |
+        {rel_neq}   [esq]:exp_rel neq [dir]:exp_rel_a {-> New a_exp.a_neq(esq.a_exp, dir.a_exp)} |
+        {rel_lteq}  [esq]:exp_rel lteq [dir]:exp_rel_a {-> New a_exp.a_lteq(esq.a_exp, dir.a_exp)} |
+        {rel_gteq}  [esq]:exp_rel gteq [dir]:exp_rel_a {-> New a_exp.a_gteq(esq.a_exp, dir.a_exp)} |
+        {rel_lt}    [esq]:exp_rel lt [dir]:exp_rel_a {-> New a_exp.a_lt(esq.a_exp, dir.a_exp)} |
+        {rel_gt}    [esq]:exp_rel gt [dir]:exp_rel_a {-> New a_exp.a_gt(esq.a_exp, dir.a_exp)} |
+        {pass}      exp_rel {-> exp_rel.a_exp};
+
+    exp_rel {-> a_exp} =
+        {add}       [esq]:exp_add mais [dir]:exp_mul {-> New a_exp.a_mais(esq.a_exp, dir.a_exp)} |
+        {sub}       [esq]:exp_add menos [dir]:exp_mul {-> New a_exp.a_menos(esq.a_exp, dir.a_exp)} |
+        {pass}      exp_add {-> exp_add.a_exp};
+
+    exp_rel_a = 
+        {exp_rel_a} exp_rel;
+
+    exp_add {-> a_exp} =
+        {mul}       [esq]:exp_mul estrela [dir]:exp_un {-> New a_exp.a_estrela(esq.a_exp, dir.a_exp)} |
+        {div}       [esq]:exp_mul div [dir]:exp_un {-> New a_exp.a_div(esq.a_exp, dir.a_exp)} |
+        {divint}    [esq]:exp_mul div_int [dir]:exp_un {-> New a_exp.a_div_int(esq.a_exp, dir.a_exp)} |
+        {pass}      exp_mul {-> exp_mul.a_exp};
+
+    exp_mul {-> a_exp} =
+        {neg}       menos exp_un |
+        {not}       exclamacao exp_un |
+        {pass}      exp_un {-> exp_un.a_exp};
+
+    exp_un {-> a_exp} =
+        {parens}    p_esq exp p_dir |
+        {valor}     valor {-> valor.a_exp} |
+        {var}       var {-> var.a_exp} ;
+
+
+Abstract Syntax Tree
+
+a_exp = 
+    {a_or} [esq]:a_exp [dir]:a_exp |
+    {a_xor} [esq]:a_exp [dir]:a_exp |
+    {a_and} [esq]:a_exp [dir]:a_exp |
+    {a_eq} [esq]:a_exp [dir]:a_exp |
+    {a_neq} [esq]:a_exp [dir]:a_exp |
+    {a_lteq} [esq]:a_exp [dir]:a_exp |
+    {a_gteq} [esq]:a_exp [dir]:a_exp |
+    {a_lt} [esq]:a_exp [dir]:a_exp |
+    {a_gt} [esq]:a_exp [dir]:a_exp |
+    {a_mais} [esq]:a_exp [dir]:a_exp |
+    {a_menos} [esq]:a_exp [dir]:a_exp |
+    {a_estrela} [esq]:a_exp [dir]:a_exp |
+    {a_div} [esq]:a_exp [dir]:a_exp |
+    {a_div_int} [esq]:a_exp [dir]:a_exp |
+    {a_symbol_values} symbol_values |
+    {a_numero} numero |
+    {a_answer_values} answer_values |
+    {a_string} string |
+    {a_identificador} [nome]:identificador [args]:a_var_size_list*;
+
+a_var_size_list = 
+    {a_multiplos} [arg]:a_exp [rest]:a_var_size_list;
