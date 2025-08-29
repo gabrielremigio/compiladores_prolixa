@@ -71,10 +71,8 @@ Tokens
     just = 'just';
     in  = 'in';
     case = 'case';
-    that = 'that';
     otherwise = 'otherwise';
     as1 = 'as';
-    as2 = 'as';
     long = 'long';
     do = 'do';
     considering = 'considering';
@@ -103,8 +101,8 @@ Tokens
     colon = ',';
     dot = '.';
     d_dot = ':';
-    aspa_simples = aspa_simples;
-    aspa_dupla = aspa_dupla;
+    aspas_simples = aspa_simples;
+    aspas_simples2 = aspa_simples;
 
     p_esq = '(';
     p_dir = ')';
@@ -116,7 +114,6 @@ Tokens
     seta_dir = '->';
     barra = '|';
 
-    char = ''' not_cr_lf ''';       /* Definição de como um caractere é reconhecido => 'a' */
     numero_hexa = '0' ('x' | 'X') digito_hexa+;
     q_mark = '?';
     
@@ -142,8 +139,9 @@ Tokens
     xor = 'xor';
 
     numero = ((numero_decimal)+ | (numero_real)+);
-    string = aspa_dupla all_sem_aspas* aspa_dupla;
-    symbol_values = aspa_simples all_sem_aspas* aspa_simples;
+    string = '"' all_sem_aspas* '"';
+    symbol_values = ''' not_cr_lf ''';
+    char = ''' not_cr_lf ''';       /* Definição de como um caractere é reconhecido => 'a' */
 
     blank = blank;
     comment = comment;
@@ -275,9 +273,8 @@ Productions
         {production} production_spceifier dot {-> New a_specifier.a_production()};
 
 
-
     programa {-> a_programa} = 
-        {programa} this is program [nome]:identificador dot [dclrs]:declaracoes [cmds]:comandos {-> New a_programa(nome, dclrs.a_declaracoes, cmds.a_comandos)};
+        {programa} this is program [nome]:identificador dot [dclrs]:declaracoes? [cmds]:comandos? {-> New a_programa(nome, dclrs.a_declaracoes, cmds.a_comandos)};
 
     declaracoes {-> a_declaracoes} = 
         {declaracoes} it presents d_dot [dclrs]:declaracao+ {-> New a_declaracoes([dclrs.a_declaracao])};
@@ -308,7 +305,7 @@ Productions
 
     var_size_list {-> a_exp*} = 
         {unico} [arg]:exp {-> [arg.a_exp]} |
-        {multiplos} [arg]:exp x [rest]:var_size_list {-> [arg.a_exp, rest.a_exp]} ;
+        {multiplos} [arg]:exp colon [rest]:var_size_list {-> [arg.a_exp, rest.a_exp]} ;
     
     unalt {-> a_unalt} = 
         {identificador_unalt} [nome]:identificador {-> New a_unalt(nome)};
@@ -324,24 +321,33 @@ Productions
         {vinculacao} [unalt]:unalt vincula [exp]:exp semicolon {-> New a_comando.a_vinculacao(unalt.a_unalt, exp.a_exp)} |
         {captura} capture p_esq [cap_rest]:capture_var_head* [var]:var p_dir semicolon {-> New a_comando.a_captura([cap_rest.a_exp], var.a_exp)} |
         {exibicao} show p_esq [show_rest]:show_exp_head* [exp]:exp p_dir semicolon {-> New a_comando.a_show([show_rest.a_exp], exp.a_exp)} |
-        {stmt} [stmt]:stmt {-> New a_comando.a_stmt(stmt.a_stmt)} |
-        {open_stmt} [stmt]:open_stmt {-> New a_comando.a_open_stmt(stmt.a_open_stmt)} |
         {enquanto} as1 long as2 p_esq [exp]:exp p_dir do [cmd]:comando {-> New a_comando.a_enquanto(exp.a_exp, cmd.a_comando)} |
         {iteracao} considering [var]:var from [inicio]:exp to [fim]:exp_a by [step]:exp_b do [cmd]:comando {-> New a_comando.a_iteracao(var.a_exp, inicio.a_exp, fim.a_exp, step.a_exp, cmd.a_comando)} |
         {abandono} abandon semicolon {-> New a_comando.a_abadon()} |
         {proxima_iteracao} go to next iteration semicolon {-> New a_comando.a_prox_iteracao()} |
-        {bloco} [bloco]:bloco {-> New a_comando.a_bloco(bloco.a_bloco)};
+        {bloco} [bloco]:bloco {-> New a_comando.a_bloco(bloco.a_bloco)} |
+        {if_com_else} just in case that1 p_esq [exp]:exp p_dir do [mtched]:matched_stmt otherwise do2 [cmd]:comando {-> New a_comando.a_if_com_else(exp.a_exp, mtched.a_matched_stmt, cmd.a_comando)} |
+        {if_sem_else} just in case that1 p_esq [exp]:exp p_dir do [cmd]:comando {-> New a_comando.a_if_sem_else(exp.a_exp, cmd.a_comando)};
 
-    stmt {-> a_stmt} =
-        {if_matched} just in case that1 p_esq [cond]:exp p_dir do [if]:stmt otherwise [else]:stmt2 {-> New a_stmt.a_if_matched(cond.a_exp, if.a_stmt, else.a_stmt)} ;
+    do2 = do;
 
-    stmt2 {-> a_stmt} = 
-        {stmt2} stmt {-> stmt.a_stmt};
+    matched_stmt {-> a_matched_stmt} =
+        {atribuicao_matched} [var]:var atribui [exp]:exp semicolon {-> New a_matched_stmt.a_atribuicao_matched(var.a_exp, exp.a_exp)} |
+        {vinculacao_matched} [unalt]:unalt vincula [exp]:exp semicolon {-> New a_matched_stmt.a_vinculacao_matched(unalt.a_unalt, exp.a_exp)} |
+        {captura_matched} capture p_esq [cap_rest]:capture_var_head* [var]:var p_dir semicolon {-> New a_matched_stmt.a_captura_matched([cap_rest.a_exp], var.a_exp)} |
+        {exibicao_matched} show p_esq [show_rest]:show_exp_head* [exp]:exp p_dir semicolon {-> New a_matched_stmt.a_show_matched([show_rest.a_exp], exp.a_exp)} |
+        {enquanto_matched} as1 long as2 p_esq [exp]:exp p_dir do [cmd]:matched_stmt {-> New a_matched_stmt.a_enquanto_matched(exp.a_exp, cmd.a_matched_stmt)} |
+        {iteracao_matched} considering [var]:var from [inicio]:exp to [fim]:exp_a by [step]:exp_b do [cmd]:matched_stmt {-> New a_matched_stmt.a_iteracao_matched(var.a_exp, inicio.a_exp, fim.a_exp, step.a_exp, cmd.a_matched_stmt)} |
+        {abandono_matched} abandon semicolon {-> New a_matched_stmt.a_abadon_matched()} |
+        {proxima_iteracao_matched} go to next iteration semicolon {-> New a_matched_stmt.a_prox_iteracao_matched()} |
+        {bloco_matched} [bloco]:bloco {-> New a_matched_stmt.a_bloco_matched(bloco.a_bloco)} |
+        {if_com_else_matched} just in case that1 p_esq [exp]:exp p_dir do [mtched]:matched_stmt otherwise do2 [mtched2]:matched_stmt2 {-> New a_matched_stmt.a_if_com_else_matched(exp.a_exp, mtched.a_matched_stmt, mtched2.a_matched_stmt2)};
 
-    open_stmt {-> a_open_stmt} = 
-        {if_unmatched} just in case that1 p_esq [cond]:exp p_dir do [cmd]:comando {-> New a_open_stmt.a_if_unmatched(cond.a_exp, cmd.a_comando)} |
-        {if_else_unmatched} just in case that1 p_esq [cond]:exp p_dir do [if]:stmt otherwise [else]:open_stmt {-> New a_open_stmt.a_if_else_unmatched(cond.a_exp, if.a_stmt, else.a_open_stmt)} ;
+    matched_stmt2 {-> a_matched_stmt2} =
+        {matched_statement} [mtched]:matched_stmt {-> New a_matched_stmt2.a_matched_statement(mtched.a_matched_stmt)};
 
+    as2 = as1;
+    
     capture_var_head {-> a_exp} = 
         {capture_var_head} [var]:var colon {-> var.a_exp} ;
 
@@ -349,59 +355,55 @@ Productions
         {show_exp_head} [exp]:exp colon {-> exp.a_exp} ;
 
     bloco {-> a_bloco} = 
-        {bloco_de_comando} c_dir [dclrs]:declaracao* [cmds]:comando* c_esq {-> New a_bloco([dclrs.a_declaracao], [cmds.a_comando])} ;
+        {bloco_de_comando} c_esq [dclrs]:declaracao* [cmds]:comando* c_dir {-> New a_bloco([dclrs.a_declaracao], [cmds.a_comando])} ;
     
     exp {-> a_exp} =
-        {or}        [esq]:exp_or or [dir]:exp_xor {-> New a_exp.a_or(esq.a_exp, dir.a_exp)} | 
-        {pass}      exp_or {-> exp_or.a_exp}; 
-
-    exp_a {-> a_exp} = 
-        {exp} exp {-> exp.a_exp} ;
-
-    exp_b {-> a_exp} = 
-        {exp} exp {-> exp.a_exp} ;
-
-    exp_or {-> a_exp} =
-        {xor}       [esq]:exp_xor xor [dir]:exp_and {-> New a_exp.a_xor(esq.a_exp, dir.a_exp)} |
+        {or}        [esq]:exp or [dir]:exp_xor {-> New a_exp.a_or(esq.a_exp, dir.a_exp)}|
         {pass}      exp_xor {-> exp_xor.a_exp};
 
-    exp_xor {-> a_exp} = 
-        {and}       [esq]:exp_and and [dir]:exp_rel {-> New a_exp.a_and(esq.a_exp, dir.a_exp)} | 
-        {pass}      exp_and {-> exp_and.a_exp} ;
+    exp_a {-> a_exp} = 
+        {exp} exp {-> exp.a_exp};
 
-    exp_and {-> a_exp} =
-        {rel_eq}    [esq]:exp_rel eq [dir]:exp_rel_a {-> New a_exp.a_eq(esq.a_exp, dir.a_exp)} |
-        {rel_neq}   [esq]:exp_rel neq [dir]:exp_rel_a {-> New a_exp.a_neq(esq.a_exp, dir.a_exp)} |
-        {rel_lteq}  [esq]:exp_rel lteq [dir]:exp_rel_a {-> New a_exp.a_lteq(esq.a_exp, dir.a_exp)} |
-        {rel_gteq}  [esq]:exp_rel gteq [dir]:exp_rel_a {-> New a_exp.a_gteq(esq.a_exp, dir.a_exp)} |
-        {rel_lt}    [esq]:exp_rel lt [dir]:exp_rel_a {-> New a_exp.a_lt(esq.a_exp, dir.a_exp)} |
-        {rel_gt}    [esq]:exp_rel gt [dir]:exp_rel_a {-> New a_exp.a_gt(esq.a_exp, dir.a_exp)} |
+    exp_b {-> a_exp} = 
+        {exp} exp {-> exp.a_exp};
+
+    exp_xor {-> a_exp} =
+        {xor}       [esq]:exp_xor xor [dir]:exp_and {-> New a_exp.a_xor(esq.a_exp, dir.a_exp)} |
+        {pass}      exp_and {-> exp_and.a_exp};
+
+    exp_and {-> a_exp} = 
+        {and}       [esq]:exp_and and [dir]:exp_rel {-> New a_exp.a_and(esq.a_exp, dir.a_exp)} |
         {pass}      exp_rel {-> exp_rel.a_exp};
 
     exp_rel {-> a_exp} =
-        {add}       [esq]:exp_add mais [dir]:exp_mul {-> New a_exp.a_mais(esq.a_exp, dir.a_exp)} |
-        {sub}       [esq]:exp_add menos [dir]:exp_mul {-> New a_exp.a_menos(esq.a_exp, dir.a_exp)} |
+        {rel_eq}    [esq]:exp_rel eq [dir]:exp_add {-> New a_exp.a_eq(esq.a_exp, dir.a_exp)} |
+        {rel_neq}   [esq]:exp_rel neq [dir]:exp_add {-> New a_exp.a_neq(esq.a_exp, dir.a_exp)} |
+        {rel_lteq}  [esq]:exp_rel lteq [dir]:exp_add {-> New a_exp.a_lteq(esq.a_exp, dir.a_exp)} |
+        {rel_gteq}  [esq]:exp_rel gteq [dir]:exp_add {-> New a_exp.a_gteq(esq.a_exp, dir.a_exp)} |
+        {rel_lt}    [esq]:exp_rel lt [dir]:exp_add {-> New a_exp.a_lt(esq.a_exp, dir.a_exp)} |
+        {rel_gt}    [esq]:exp_rel gt [dir]:exp_add {-> New a_exp.a_gt(esq.a_exp, dir.a_exp)} |
         {pass}      exp_add {-> exp_add.a_exp};
 
-    exp_rel_a {-> a_exp} = 
-        {exp_rel_a} exp_rel {-> exp_rel.a_exp};
-
     exp_add {-> a_exp} =
-        {mul}       [esq]:exp_mul estrela [dir]:exp_un {-> New a_exp.a_estrela(esq.a_exp, dir.a_exp)} |
-        {div}       [esq]:exp_mul div [dir]:exp_un {-> New a_exp.a_div(esq.a_exp, dir.a_exp)} |
-        {divint}    [esq]:exp_mul div_int [dir]:exp_un {-> New a_exp.a_div_int(esq.a_exp, dir.a_exp)} |
+        {add}       [esq]:exp_add mais [dir]:exp_mul {-> New a_exp.a_add(esq.a_exp, dir.a_exp)} |
+        {sub}       [esq]:exp_add menos [dir]:exp_mul {-> New a_exp.a_sub(esq.a_exp, dir.a_exp)} |
         {pass}      exp_mul {-> exp_mul.a_exp};
 
     exp_mul {-> a_exp} =
-        {neg}       menos [exp]:exp_un {-> New a_exp.a_neg(exp.a_exp)} |
-        {not}       exclamacao [exp]:exp_un {-> New a_exp.a_not(exp.a_exp)} |
+        {mul}       [esq]:exp_mul estrela [dir]:exp_un {-> New a_exp.a_mul(esq.a_exp, dir.a_exp)} |
+        {div}       [esq]:exp_mul div [dir]:exp_un {-> New a_exp.a_div(esq.a_exp, dir.a_exp)} |
+        {divint}    [esq]:exp_mul div_int [dir]:exp_un {-> New a_exp.a_div_int(esq.a_exp, dir.a_exp)} |
         {pass}      exp_un {-> exp_un.a_exp};
 
     exp_un {-> a_exp} =
-        {parens}    p_esq [exp]:exp p_dir {-> exp.a_exp} |
-        {valor}     valor {-> valor.a_exp} |
-        {var}       var {-> var.a_exp} ;
+        {neg}       menos [exp]:exp_un {-> New a_exp.a_neg(exp.a_exp)} |
+        {not}       exclamacao [exp]:exp_un {-> New a_exp.a_not(exp.a_exp)} |
+        {pass}      exp_primary {-> exp_primary.a_exp};
 
+    exp_primary {-> a_exp} =
+        {parens}    p_esq [exp]:exp p_dir {-> New a_exp.a_parens(exp.a_exp)} |
+        {valor}     valor {-> valor.a_exp} |
+        {var}       var {-> var.a_exp};
 
 Abstract Syntax Tree
 
@@ -472,7 +474,7 @@ Abstract Syntax Tree
     a_specifier = {a_token} | {a_production};
 
     a_programa = 
-        [nome]:identificador [dclrs]:a_declaracoes [cmds]:a_comandos;
+        [nome]:identificador [dclrs]:a_declaracoes? [cmds]:a_comandos?;
 
     a_declaracoes =
         [dclrs]:a_declaracao*;
@@ -490,31 +492,37 @@ Abstract Syntax Tree
         {a_answer} |
         {a_symbol} ;
 
+    a_unalt = [nome]:identificador;
+
+    a_bloco = [dclrs]:a_declaracao* [cmds]:a_comando*;
+
+    a_matched_stmt = 
+        {a_atribuicao_matched} [var]:a_exp [exp]:a_exp |
+        {a_vinculacao_matched} [unalt]:a_unalt [exp]:a_exp |
+        {a_captura_matched} [cap_rest]:a_exp* [var]:a_exp |
+        {a_show_matched} [show_rest]:a_exp* [exp]:a_exp |
+        {a_enquanto_matched} [exp]:a_exp [cmd]:a_matched_stmt |
+        {a_iteracao_matched} [var]:a_exp [inicio]:a_exp [fim]:a_exp [step]:a_exp [cmd]:a_matched_stmt |
+        {a_abadon_matched} |
+        {a_prox_iteracao_matched} |
+        {a_bloco_matched} [bloco]:a_bloco |
+        {a_if_com_else_matched} [exp]:a_exp [mtched]:a_matched_stmt [mtched2]:a_matched_stmt2;
+
+    a_matched_stmt2 = 
+        {a_matched_statement} [mtched]:a_matched_stmt;
+
     a_comando = 
         {a_atribuicao} [var]:a_exp [exp]:a_exp |
         {a_vinculacao} [unalt]:a_unalt [exp]:a_exp |
         {a_captura} [cap_rest]:a_exp* [var]:a_exp |
         {a_show} [show_rest]:a_exp* [exp]:a_exp |
-        {a_stmt} [stmt]:a_stmt |
-        {a_open_stmt} [stmt]:a_open_stmt |
         {a_enquanto} [exp]:a_exp [cmd]:a_comando |
         {a_iteracao} [var]:a_exp [inicio]:a_exp [fim]:a_exp [step]:a_exp [cmd]:a_comando |
         {a_abadon} |
-        {a_prox_iteracao} |
-        {a_bloco} [bloco]:a_bloco;
-
-    a_stmt = 
-        {a_if_matched} [cond]:a_exp [if]:a_stmt [else]:a_stmt;
-
-    a_open_stmt =
-        {a_if_unmatched} [cond]:a_exp [cmd]:a_comando |
-        {a_if_else_unmatched} [cond]:a_exp [if]:a_stmt [else]:a_open_stmt ;
-
-    a_bloco = 
-        [dclrs]:a_declaracao* [cmds]:a_comando*;
-
-    a_unalt = 
-        [nome]:identificador;
+        {a_prox_iteracao} | 
+        {a_bloco} [bloco]:a_bloco |
+        {a_if_com_else} [exp]:a_exp [mtched]:a_matched_stmt [cmd]:a_comando |
+        {a_if_sem_else} [exp]:a_exp [cmd]:a_comando;
 
     a_exp = 
         {a_or} [esq]:a_exp [dir]:a_exp |
@@ -526,17 +534,18 @@ Abstract Syntax Tree
         {a_gteq} [esq]:a_exp [dir]:a_exp |
         {a_lt} [esq]:a_exp [dir]:a_exp |
         {a_gt} [esq]:a_exp [dir]:a_exp |
-        {a_mais} [esq]:a_exp [dir]:a_exp |
-        {a_menos} [esq]:a_exp [dir]:a_exp |
-        {a_estrela} [esq]:a_exp [dir]:a_exp |
+        {a_add} [esq]:a_exp [dir]:a_exp |
+        {a_sub} [esq]:a_exp [dir]:a_exp |
+        {a_mul} [esq]:a_exp [dir]:a_exp |
         {a_div} [esq]:a_exp [dir]:a_exp |
         {a_div_int} [esq]:a_exp [dir]:a_exp |
-        {a_neg} [exp]:a_exp |                    
-        {a_not} [exp]:a_exp |                      
-        {a_numero} numero |                      
-        {a_string} string |                      
-        {a_symbol_values} symbol_values |        
+        {a_neg} [exp]:a_exp |
+        {a_not} [exp]:a_exp |
+        {a_parens} [exp]:a_exp |
+        {a_symbol_values} symbol_values |
+        {a_numero} numero |
         {a_answer_values} answer_values |
+        {a_string} string |
         {a_identificador1} [nome]:identificador |
         {a_identificador2} [nome]:identificador [args]:a_exp* |
         {a_vector_sizes} [exp]:a_exp [rest]:a_exp;
