@@ -1,0 +1,377 @@
+Package prolixa;
+
+Helpers
+    all = [0 .. 0xFFFF];    /* Qualquer caractere da tabela ASCII */
+    lowercase = ['a' ..'z'];
+    uppercase = ['A' ..'Z'];
+    digito = ['0' .. '9'];
+    digito_hexa = [digito + [['a' .. 'f'] + ['A' .. 'F']]];
+
+    numero_decimal = (digito)+;
+    numero_real = (digito)+ '.' (digito)+;
+
+    espaco = ' ';
+    aspa_simples = 39;
+    aspa_dupla = 34;
+    chave_dir_ascii = 123;
+    chave_esq_ascii = 125;
+    tab = 9;
+    rc = 13;
+    nl = 10;
+    eol = rc nl | rc | nl;
+    blank = (eol | tab | espaco)+;
+
+    all_sem_chave = [all - chave_esq_ascii];
+
+    all_sem_aspas = [all - [aspa_dupla + aspa_simples]];
+
+    not_cr_lf = [all - [rc + nl]];   
+
+    comment = '{' all_sem_chave* '}'; /* regra de comentário ainda está inválida de acordo com os padrões de c, verificar o docs de testes para ver quais casos são inválidos. */
+
+    letra = lowercase | uppercase | '_' ;
+
+    id = uppercase (letra)*;
+
+States
+    normal, package;
+
+Tokens
+
+    {package} pkg_id = letra (letra | digito)*;
+
+    {normal->package} package = 'Package';
+
+    states = 'States';
+    helpers = 'Helpers';
+    tokens = 'Tokens';
+    ignored = 'Ignored';
+    productions = 'Productions';
+
+    token_specifier = 'T';
+    production_spceifier = 'P';
+
+    this = 'This';
+    is = 'is';
+    program = 'program';
+    it = 'It';
+    presents = 'presents';
+    let = 'Let';
+    us = 'us';
+    begin = 'begin';
+    would = 'would';
+    be = 'be';
+    all = 'all';
+    unalterable = 'unalterable';
+    alterable = 'alterable';
+    symbol = 'symbol';
+    number = 'number';
+    answer = 'answer';
+    answer_values = 'yes' | 'no';
+    just = 'just';
+    in  = 'in';
+    case = 'case';
+    otherwise = 'otherwise';
+    as1 = 'as';
+    long = 'long';
+    do = 'do';
+    considering = 'considering';
+    that1 = 'that';
+    that2 = 'That';
+    from = 'from';
+    by = 'by';
+    show = 'show';
+    capture = 'capture';
+    abandon = 'abandon';
+    go = 'go';
+    to = 'to';
+    next = 'next';
+    iteration = 'iteration';
+    vector = 'vector';
+    of = 'of';
+
+    x = 'x';
+
+    identificador = id ;
+
+    constante = 'unalterable' id;
+    variavel = 'alterable' id;
+
+    semicolon = ';';
+    colon = ',';
+    dot = '.';
+    d_dot = ':';
+    aspas_simples = aspa_simples;
+    aspas_simples2 = aspa_simples;
+
+    p_esq = '(';
+    p_dir = ')';
+    c_esq = '[';
+    c_dir = ']';
+    chave_esq = '{';
+    chave_dir = '}';
+
+    seta_dir = '->';
+    barra = '|';
+
+    numero_hexa = '0' ('x' | 'X') digito_hexa+;
+    q_mark = '?';
+    
+    vincula = '=';
+    atribui = ':=';
+    
+    mais = '+';
+    menos = '-';
+    estrela = '*';
+    div = '/';
+    div_int = '//';
+
+    eq = '==';
+    neq = '!=';
+    lt = '<';
+    lteq = '<=';
+    gt = '>';
+    gteq = '>=';
+
+    exclamacao = '!';
+    and = 'and';
+    or = 'or';
+    xor = 'xor';
+
+    numero = ((numero_decimal)+ | (numero_real)+);
+    string = '"' all_sem_aspas* '"';
+    symbol_values = ''' not_cr_lf ''';
+    char = ''' not_cr_lf ''';       /* Definição de como um caractere é reconhecido => 'a' */
+
+    blank = blank;
+    comment = comment;
+
+Ignored Tokens
+    blank, comment;
+
+Productions
+
+    start = 
+        {grammar} grammar |
+        {programa} programa;
+
+    grammar = P.package? P.helpers? P.states? P.tokens? P.ign_tokens? P.productions?;
+
+    package = T.package pkg_name?;
+
+    pkg_name = pkg_id [pkg_ids]:pkg_name_tail* semicolon;
+
+    pkg_name_tail = dot pkg_id;
+
+    helpers = T.helpers [helper_defs]: helper_def*;
+
+    helper_def = identificador vincula expr_reg semicolon;
+
+    states = T.states id_list? semicolon;
+
+    id_list = identificador [ids]:id_list_tail*;
+
+    id_list_tail = colon identificador;
+
+    tokens = T.tokens [token_defs]: token_def*;
+
+    token_def = state_list? identificador vincula expr_reg look_ahead? semicolon;
+
+    state_list = chave_esq identificador transition? [state_lists]:state_list_tail* chave_dir;
+
+    state_list_tail = colon identificador transition?;
+
+    transition = seta_dir identificador;
+
+    ign_tokens = ignored T.tokens id_list? semicolon;
+
+    look_ahead = div expr_reg;
+
+    expr_reg = concat[concats]:expr_reg_tail*;
+
+    expr_reg_tail = barra concat;
+
+    concat = [expr_uns]:expr_un*;
+
+    expr_un = basic op_un?;
+
+    basic = 
+        {char} P.char |
+        {conjunto} conjunto |
+        {string} string |
+        {identificador} identificador |
+        {expr_reg} p_esq expr_reg p_dir;
+
+    char = 
+        {char} T.char |
+        {dec} numero |
+        {hex} numero_hexa;
+
+    conjunto = 
+        {operacao} c_esq [left]:basic op_bin [right]:basic c_dir |
+        {intervalo} c_esq [left]:P.char d_dot [right]:P.char c_dir;
+    
+    op_un = 
+        {estrela} T.estrela |
+        {q_mark} T.q_mark |
+        {mais} T.mais;
+
+    op_bin = 
+        {mais} T.mais |
+        {menos} T.menos;
+
+    productions = T.productions [prods]:prod*;
+
+    prod = identificador vincula alts semicolon;
+
+    alts = alt [alts]:alts_tail*;
+
+    alts_tail = barra alt;
+
+    alt = 
+        {parsed} alt_name? [elems]:elem* |
+        {ignored} p_esq alt_name? [elems]:elem* p_dir;
+
+    alt_name = chave_esq identificador chave_dir;
+
+    elem = elem_name? specifier? identificador op_un?;
+
+    elem_name = c_esq identificador c_dir colon;
+
+    specifier = 
+        {token} token_specifier dot |
+        {production} production_spceifier dot; 
+
+    programa = 
+        {programa} this is program identificador dot declaracoes? comandos?;
+
+    declaracoes = 
+        {declaracoes} it presents d_dot declaracao+;
+
+    comandos = 
+        {comandos} let us begin d_dot comando+ that2 would be all dot;
+
+    declaracao = 
+        {alterable_declaracao} alterable tipo identificador semicolon |
+        {unalterable_declaracao} unalterable tipo identificador vincula_valor? semicolon |
+        {vector_declaracao} vector of tipo p_esq vector_size_list p_dir identificador semicolon;
+
+    vector_size_list =
+        {single_size} exp |
+        {multiple_sizes} exp T.x vector_size_list;    
+
+    vincula_valor = 
+        {vincula_valor} vincula valor;  
+
+    tipo = 
+        {numero_tipo} number |
+        {answer_tipo} answer |
+        {symbol_tipo} symbol;
+
+    var = 
+        {identificador_var1} identificador |
+        {identificador_var2} identificador p_esq var_size_list p_dir;
+
+    var_size_list = 
+        {unico} exp |
+        {multiplos} exp colon var_size_list;
+    
+    unalt = 
+        {identificador_unalt} identificador;
+
+    valor = 
+        {symbol_valor} symbol_values |
+        {numero_valor} numero |
+        {answer_valor} answer_values |
+        {string_valor} string;
+    
+    comando =
+        {atribuicao} var atribui exp semicolon |
+        {vinculacao} unalt vincula exp semicolon |
+        {captura} capture p_esq capture_var_head* var p_dir semicolon |
+        {exibicao} show p_esq show_exp_head* exp p_dir semicolon |
+        {enquanto} as1 long as2 p_esq exp p_dir do comando |
+        {iteracao} considering var from exp to exp_a by exp_b do comando |
+        {abandono} abandon semicolon |
+        {proxima_iteracao} go to next iteration semicolon |
+        {bloco} bloco |
+        {if_com_else} just in case that1 p_esq exp p_dir do matched_stmt otherwise do2 comando |
+        {if_sem_else} just in case that1 p_esq exp p_dir do comando;
+
+    do2 = do;
+
+    matched_stmt =
+        {atribuicao_matched} var atribui exp semicolon |
+        {vinculacao_matched} unalt vincula exp semicolon |
+        {captura_matched} capture p_esq capture_var_head* var p_dir semicolon |
+        {exibicao_matched} show p_esq show_exp_head* exp p_dir semicolon |
+        {enquanto_matched} as1 long as2 p_esq exp p_dir do matched_stmt |
+        {iteracao_matched} considering var from exp to exp_a by exp_b do matched_stmt |
+        {abandono_matched} abandon semicolon |
+        {proxima_iteracao_matched} go to next iteration semicolon |
+        {bloco_matched} bloco |
+        {if_com_else_matched} just in case that1 p_esq exp p_dir do matched_stmt otherwise do2 matched_stmt2;
+
+    matched_stmt2 = matched_stmt;
+
+    as2 = as1;
+
+    capture_var_head = 
+        {capture_var_head} var colon;
+
+    show_exp_head = 
+        {show_exp_head} exp colon;
+
+    comando_a = 
+        {comando_a} comando;
+
+    bloco = 
+        {bloco_de_comando} c_esq declaracao* comando* c_dir;
+    
+    exp =
+        {or}        exp or exp_xor |
+        {pass}      exp_xor;
+
+    exp_a = 
+        {exp} exp;
+
+    exp_b = 
+        {exp} exp;
+
+    exp_xor =
+        {xor}       exp_xor xor exp_and |
+        {pass}      exp_and;
+
+    exp_and = 
+        {and}       exp_and and exp_rel |
+        {pass}      exp_rel;
+
+    exp_rel =
+        {rel_eq}    exp_rel eq exp_add |
+        {rel_neq}   exp_rel neq exp_add |
+        {rel_lteq}  exp_rel lteq exp_add |
+        {rel_gteq}  exp_rel gteq exp_add |
+        {rel_lt}    exp_rel lt exp_add |
+        {rel_gt}    exp_rel gt exp_add |
+        {pass}      exp_add;
+
+    exp_add =
+        {add}       exp_add mais exp_mul |
+        {sub}       exp_add menos exp_mul |
+        {pass}      exp_mul;
+
+    exp_mul =
+        {mul}       exp_mul estrela exp_un |
+        {div}       exp_mul div exp_un |
+        {divint}    exp_mul div_int exp_un |
+        {pass}      exp_un;
+
+    exp_un =
+        {neg}       menos exp_un |
+        {not}       exclamacao exp_un |
+        {pass}      exp_primary;
+
+    exp_primary =
+        {parens}    p_esq exp p_dir |
+        {valor}     valor |
+        {var}       var;

@@ -151,6 +151,128 @@ Ignored Tokens
 
 Productions
 
+    start {-> a_start} = 
+        {grammar} [gramatica]:grammar {-> New a_start.a_grammar(gramatica.a_grammar)} |
+        {programa} [programa]:programa {-> New a_start.a_programa(programa.a_programa)};
+
+    grammar {-> a_grammar} = 
+        [pkg]:P.package? [hlp]:P.helpers? [sts]:P.states? [tks]:P.tokens? [ign]:P.ign_tokens? [prds]:P.productions? 
+        {-> New a_grammar(pkg.a_package, hlp.a_helpers, sts.a_states, tks.a_tokens, ign.a_ign_tokens, prds.a_productions)};
+
+    package {-> a_package} = 
+        T.package [nome]:pkg_name? {-> New a_package(nome.a_pkg_name)};
+
+    pkg_name {-> a_pkg_name} = 
+        [id]:pkg_id [ids]:pkg_name_tail* semicolon {-> New a_pkg_name(id, [ids.a_pkg_name_tail])};
+
+    pkg_name_tail {-> a_pkg_name_tail} = 
+        dot [id]:pkg_id {-> New a_pkg_name_tail(id)};
+
+    helpers {-> a_helpers} = 
+        T.helpers [defs]:helper_def* {-> New a_helpers([defs.a_helper_def])};
+
+    helper_def {-> a_helper_def} = 
+        [nome]:identificador vincula [expr]:expr_reg semicolon {-> New a_helper_def(nome, expr.a_expr_reg)};
+
+    states {-> a_states} = 
+        T.states [lista]:id_list? semicolon {-> New a_states(lista.a_id_list)};
+
+    id_list {-> a_id_list} = 
+        [primeiro]:identificador [resto]:id_list_tail* {-> New a_id_list(primeiro, [resto.a_id_list_tail])};
+
+    id_list_tail {-> a_id_list_tail} = 
+        colon [id]:identificador {-> New a_id_list_tail(id)};
+
+    tokens {-> a_tokens} = 
+        T.tokens [defs]:token_def* {-> New a_tokens([defs.a_token_def])};
+
+    token_def {-> a_token_def} = 
+        [states]:state_list? [nome]:identificador vincula [expr]:expr_reg [look]:look_ahead? semicolon 
+        {-> New a_token_def(states.a_state_list, nome, expr.a_expr_reg, look.a_look_ahead)};
+
+    state_list {-> a_state_list} = 
+        chave_esq [primeiro]:identificador [trans]:transition? [resto]:state_list_tail* chave_dir 
+        {-> New a_state_list(primeiro, trans.a_transition, [resto.a_state_list_tail])};
+
+    state_list_tail {-> a_state_list_tail} = 
+        colon [id]:identificador [trans]:transition? {-> New a_state_list_tail(id, trans.a_transition)};
+
+    transition {-> a_transition} = 
+        seta_dir [destino]:identificador {-> New a_transition(destino)};
+
+    ign_tokens {-> a_ign_tokens} = 
+        ignored T.tokens [lista]:id_list? semicolon {-> New a_ign_tokens(lista.a_id_list)};
+
+    look_ahead {-> a_look_ahead} = 
+        div [expr]:expr_reg {-> New a_look_ahead(expr.a_expr_reg)};
+
+    expr_reg {-> a_expr_reg} = 
+        [primeiro]:concat [resto]:expr_reg_tail* {-> New a_expr_reg(primeiro.a_concat, [resto.a_expr_reg_tail])};
+
+    expr_reg_tail {-> a_expr_reg_tail} = 
+        barra [concat]:concat {-> New a_expr_reg_tail(concat.a_concat)};
+
+    concat {-> a_concat} = 
+        [exprs]:expr_un* {-> New a_concat([exprs.a_expr_un])};
+
+    expr_un {-> a_expr_un} = 
+        [basic]:basic [op]:op_un? {-> New a_expr_un(basic.a_basic, op.a_op_un)};
+    
+    basic {-> a_basic} = 
+        {char} [char]:P.char {-> New a_basic.a_char(char.a_char)} |
+        {conjunto} [conj]:conjunto {-> New a_basic.a_conjunto(conj.a_conjunto)} |
+        {string} [str]:string {-> New a_basic.a_string(str)} |
+        {identificador} [id]:identificador {-> New a_basic.a_identificador(id)} |
+        {expr_reg} p_esq [expr]:expr_reg p_dir {-> New a_basic.a_expr_reg(expr.a_expr_reg)};
+
+    char {-> a_char} = 
+        {char} T.char {-> New a_char.a_char(T.char)} |
+        {dec} [num]:numero {-> New a_char.a_dec(num)} |
+        {hex} [hex]:numero_hexa {-> New a_char.a_hex(hex)};
+
+    conjunto {-> a_conjunto} = 
+        {operacao} c_esq [left]:basic [op]:op_bin [right]:basic c_dir {-> New a_conjunto.a_operacao(left.a_basic, op.a_op_bin, right.a_basic)} |
+        {intervalo} c_esq [left]:P.char d_dot [right]:P.char c_dir {-> New a_conjunto.a_intervalo(left.a_char, right.a_char)};
+    
+    op_un {-> a_op_un} = 
+        {estrela} T.estrela {-> New a_op_un.a_estrela()} |
+        {q_mark} T.q_mark {-> New a_op_un.a_q_mark()} |
+        {mais} T.mais {-> New a_op_un.a_mais()};
+
+    op_bin {-> a_op_bin} = 
+        {mais} T.mais {-> New a_op_bin.a_mais()} |
+        {menos} T.menos {-> New a_op_bin.a_menos()};
+
+    productions {-> a_productions} = 
+        T.productions [prods]:prod* {-> New a_productions([prods.a_prod])};
+
+    prod {-> a_prod} = 
+        [nome]:identificador vincula [alts]:alts semicolon {-> New a_prod(nome, alts.a_alts)};
+
+    alts {-> a_alts} = 
+        [primeiro]:alt [resto]:alts_tail* {-> New a_alts(primeiro.a_alt, [resto.a_alts_tail])};
+
+    alts_tail {-> a_alts_tail} = 
+        barra [alt]:alt {-> New a_alts_tail(alt.a_alt)};
+
+    alt {-> a_alt} = 
+        {parsed} [nome]:alt_name? [elems]:elem* {-> New a_alt.a_parsed(nome.a_alt_name, [elems.a_elem])} |
+        {ignored} p_esq [nome]:alt_name? [elems]:elem* p_dir {-> New a_alt.a_ignored(nome.a_alt_name, [elems.a_elem])};
+
+    alt_name {-> a_alt_name} = 
+        chave_esq [nome]:identificador chave_dir {-> New a_alt_name(nome)};
+
+    elem {-> a_elem} = 
+        [nome]:elem_name? [spec]:specifier? [id]:identificador [op]:op_un? {-> New a_elem(nome.a_elem_name, spec.a_specifier, id, op.a_op_un)};
+
+    elem_name {-> a_elem_name} = 
+        c_esq [nome]:identificador c_dir colon {-> New a_elem_name(nome)};
+
+    specifier {-> a_specifier} = 
+        {token} token_specifier dot {-> New a_specifier.a_token()} |
+        {production} production_spceifier dot {-> New a_specifier.a_production()};
+
+
     programa {-> a_programa} = 
         {programa} this is program [nome]:identificador dot [dclrs]:declaracoes? [cmds]:comandos? {-> New a_programa(nome, dclrs.a_declaracoes, cmds.a_comandos)};
 
@@ -208,8 +330,6 @@ Productions
         {if_sem_else} just in case that1 p_esq [exp]:exp p_dir do [cmd]:comando {-> New a_comando.a_if_sem_else(exp.a_exp, cmd.a_comando)};
 
     do2 = do;
-
-    // Resolver casos de igualdades entre os casos matched e unmatched dos comandos
 
     matched_stmt {-> a_matched_stmt} =
         {atribuicao_matched} [var]:var atribui [exp]:exp semicolon {-> New a_matched_stmt.a_atribuicao_matched(var.a_exp, exp.a_exp)} |
@@ -286,6 +406,72 @@ Productions
         {var}       var {-> var.a_exp};
 
 Abstract Syntax Tree
+
+    a_start = 
+        {a_grammar} [gramatica]:a_grammar |
+        {a_programa} [programa]:a_programa;
+
+    a_grammar = 
+        [package]:a_package? [helpers]:a_helpers? [states]:a_states? [tokens]:a_tokens? [ign_tokens]:a_ign_tokens? [productions]:a_productions?;
+
+    a_package = [nome]:a_pkg_name?;
+    a_pkg_name = [id]:pkg_id [ids]:a_pkg_name_tail*;
+    a_pkg_name_tail = [id]:pkg_id;
+
+    a_helpers = [defs]:a_helper_def*;
+    a_helper_def = [nome]:identificador [expr]:a_expr_reg;
+
+    a_states = [lista]:a_id_list?;
+    a_id_list = [primeiro]:identificador [resto]:a_id_list_tail*;
+    a_id_list_tail = [id]:identificador;
+
+    a_tokens = [defs]:a_token_def*;
+    a_token_def = [states]:a_state_list? [nome]:identificador [expr]:a_expr_reg [look]:a_look_ahead?;
+
+    a_state_list = [primeiro]:identificador [trans]:a_transition? [resto]:a_state_list_tail*;
+    a_state_list_tail = [id]:identificador [trans]:a_transition?;
+    a_transition = [destino]:identificador;
+
+    a_ign_tokens = [lista]:a_id_list?;
+    a_look_ahead = [expr]:a_expr_reg;
+
+    a_expr_reg = [primeiro]:a_concat [resto]:a_expr_reg_tail*;
+    a_expr_reg_tail = [concat]:a_concat;
+    a_concat = [exprs]:a_expr_un*;
+    a_expr_un = [basic]:a_basic [op]:a_op_un?;
+
+    a_basic = 
+        {a_char} [char]:a_char |
+        {a_conjunto} [conj]:a_conjunto |
+        {a_string} string |
+        {a_identificador} identificador |
+        {a_expr_reg} [expr]:a_expr_reg;
+
+    a_char = 
+        {a_char} T.char |
+        {a_dec} numero |
+        {a_hex} numero_hexa;
+
+    a_conjunto = 
+        {a_operacao} [left]:a_basic [op]:a_op_bin [right]:a_basic |
+        {a_intervalo} [left]:a_char [right]:a_char;
+
+    a_op_un = {a_estrela} | {a_q_mark} | {a_mais};
+    a_op_bin = {a_mais} | {a_menos};
+
+    a_productions = [prods]:a_prod*;
+    a_prod = [nome]:identificador [alts]:a_alts;
+    a_alts = [primeiro]:a_alt [resto]:a_alts_tail*;
+    a_alts_tail = [alt]:a_alt;
+
+    a_alt = 
+        {a_parsed} [nome]:a_alt_name? [elems]:a_elem* |
+        {a_ignored} [nome]:a_alt_name? [elems]:a_elem*;
+
+    a_alt_name = [nome]:identificador;
+    a_elem = [nome]:a_elem_name? [spec]:a_specifier? [id]:identificador [op]:a_op_un?;
+    a_elem_name = [nome]:identificador;
+    a_specifier = {a_token} | {a_production};
 
     a_programa = 
         [nome]:identificador [dclrs]:a_declaracoes? [cmds]:a_comandos?;
